@@ -1,0 +1,13 @@
+# Directories
+.vs/
+bin-int/
+VieM/bin/
+MusCat/bin/
+MusCat/bin-int/
+
+# Files
+*.user
+*.vcxproj
+*.vcxproj.filters
+*.jason
+*.sln
