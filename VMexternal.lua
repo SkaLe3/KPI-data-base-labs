@@ -5,6 +5,7 @@ IncludeDir = {}
 
 IncludeDir["Glad"] = "../vendor/Glad/include"
 IncludeDir["glm"] = "../vendor/glm"
+IncludeDir["PostgreSQL"] = os.getenv("POSTGRESQL_INCLUDE")
 --IncludeDir["yaml_cpp"] = "Engine/vendor/yaml-cpp/include"
 
 

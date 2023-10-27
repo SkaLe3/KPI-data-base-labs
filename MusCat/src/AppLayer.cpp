@@ -4,10 +4,11 @@
 #include <VieM/Core/Image.h>
 #include <VieM/UI/UI.h>
 #include <VieM/UI/Theme.h>
-
+#include <VieM/Core/Log.h>
 
 void AppLayer::OnAttach()
 {
+	using namespace std;
 	VieM::Application* app = &VieM::Application::Get();
 	app->GetWindow().GetTitlebar().SetMenubarCallback([app, this]()
 		{
@@ -21,6 +22,10 @@ void AppLayer::OnAttach()
 				{
 
 				}
+				if (ImGui::MenuItem("FPS", NULL, &m_FPSPanel.m_Enabled))
+				{
+
+				}
 				ImGui::EndMenu();
 			}
 
@@ -31,17 +36,33 @@ void AppLayer::OnAttach()
 			}
 		});
 	app->GetWindow().SetVSync(0);
+
+
+
+
+
+	m_View = make_shared<View>();
+	m_Model = make_shared<Model>();
+	m_Controller = make_shared<Controller>(m_Model, m_View);
+	m_View->AddListener(m_Controller);
+	m_Controller->Run();
+
 }
 
 void AppLayer::OnUpdate(float ts)
 {
 
-
 }
+
+
 
 void AppLayer::OnUIRender()
 {
 	m_SettignsPanel.OnRender();
-	m_TilesPanel.OnRender();
+	m_FPSPanel.OnRender();
+
+	// View
+	m_View->OnRender();
+
 }
 

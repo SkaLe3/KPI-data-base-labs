@@ -20,13 +20,19 @@ project "MusCat"
 		"../vendor/GLFW/include",
 		"%{IncludeDir.glm}",
 		"../vendor",
-
+		"%{IncludeDir.PostgreSQL}",
 		"src"
 	}
 
+	libdirs 
+	{
+		os.getenv("POSTGRESQL_LIB")
+	}
 	links
 	{
-		"VieM"
+		"VieM",
+		"libpq"
+		
 	}
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")

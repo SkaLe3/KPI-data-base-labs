@@ -11,6 +11,8 @@ VieM::Application* VieM::CreateApplication(int argc, char** argv)
 	spec.CustomTitleBar = true;
 	spec.CenterWindow = true;
 	spec.IconPath = "assets/images/logo.png";
+	//spec.Width = 1600;
+	//spec.Height = 900;
 
 	VieM::Application* app = new VieM::Application(spec);
 

@@ -38,6 +38,8 @@ namespace VieM {
 		Init();
 		m_TitleBar = std::make_shared<UI::TitleBar>(this);
 		m_Settings = std::make_shared<UI::Settings>();
+		m_Data.Width = specs.Width;
+		m_Data.Height = specs.Height;
 	}
 	
 	void Window::OnUpdate()
@@ -54,6 +56,13 @@ namespace VieM {
 	
 
 	
+	std::pair<int32_t, int32_t> Window::GetPos() const
+	{
+		int32_t x,y;
+		glfwGetWindowPos(m_Window, &x, &y);
+		return { x, y };
+	}
+
 	void Window::SetVSync(bool enabled)
 	{
 		if (enabled)
