@@ -35,7 +35,6 @@ void AppLayer::OnAttach()
 				ImGui::EndMenu();
 			}
 		});
-	app->GetWindow().SetVSync(0);
 
 
 
