@@ -1,5 +1,7 @@
 #include "Model.h"
 #include <VieM/Core/Log.h>
+#include <sstream>
+#include <algorithm>
 
 Model::~Model()
 {
@@ -23,6 +25,7 @@ bool Model::Connect(const std::string& username, const std::string& password, st
 		Finish();
 		return false;
 	}
+	errorMessage = "";
 	return true;
 }
 
@@ -66,6 +69,160 @@ bool Model::CreateTables(std::string& errorMessage)
 	return errorMessage.empty();
 }
 
+std::shared_ptr<TableData> Model::FetchTableData(Table table, std::string& errorMessage)
+{
+	std::string query = "SELECT * FROM " + TableSpecs::GetName(table);
+	PGresult* result = PQexecParams(m_Connection, query.c_str(), 0, NULL, NULL, NULL, NULL, 0);
+
+	std::shared_ptr<TableData> data = std::make_shared<TableData>();
+
+	if (PQresultStatus(result) != PGRES_TUPLES_OK)
+	{
+		errorMessage = std::string("Select Query execution failed for table:\n") + TableSpecs::GetName(table) + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		PQclear(result);
+		return data;
+	}
+	int32_t rows = PQntuples(result);
+	int32_t columns = PQnfields(result);
+	
+	for (int row = 0; row < rows; ++row)
+	{
+		std::vector<std::string> rowData;
+		for (int col = 0; col < columns; ++col)
+		{
+			rowData.emplace_back(PQgetvalue(result, row, col));
+		}
+		data->push_back(rowData);
+	}
+	PQclear(result);
+	errorMessage = "";
+	return data;
+}
+
+bool Model::AddRecord(Table table, std::vector<std::string> data, std::string& errorMessage)
+{
+
+
+	std::stringstream ss;
+	ss << "INSERT INTO " << TableSpecs::GetName(table) << " (";
+	auto columns = TableSpecs::GetColumns(table);
+	for (int32_t col = 0, size = columns.size(); col < size; col++)
+	{
+		if (columns[col].Type == ColumnType::Serial)
+			continue;
+		ss << columns[col].Name;
+		if (size - col != 1)
+			ss << ",";
+	}
+	ss << ") VALUES (";
+	for (int32_t col = 0, size = data.size(); col < size; col++)
+	{
+		if (columns[col].Type == ColumnType::Serial)
+			continue;
+		if (data[col].empty())
+		{
+			ss << "NULL";
+		}
+		else 
+		{
+		ss << "'" << data[col] << "'";
+		}
+		if (size - col != 1)
+			ss << ",";
+	}
+	ss << ")";
+
+
+	PGresult* result = PQexec(m_Connection, ss.str().c_str());
+
+	if (PQresultStatus(result) != PGRES_COMMAND_OK) {
+		
+		errorMessage = std::string("Insert Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		VM_ERROR("Query text was: ", ss.str(), "\n");
+		PQclear(result);
+		return false;
+	}
+	PQclear(result);
+	errorMessage = "";
+	return true;
+}
+
+bool Model::IsRecordExists(Table table, std::vector<Column> columns, std::vector<std::string> data, std::string& errorMessage)
+{
+
+	std::string query = "SELECT * FROM " + TableSpecs::GetName(table) + " WHERE ";
+	for (size_t i = 0; i < columns.size(); ++i) {
+		if (i > 0) {
+			query += " AND ";
+		}
+		query += columns[i].Name + " = $" + std::to_string(i + 1);
+	}
+
+	// Prepare the statement and bind the parameters.
+	const char* paramValues[10];
+	for (size_t i = 0; i < data.size(); ++i) {
+		paramValues[i] = data[i].empty() ? "NULL" : data[i].c_str();
+	}
+
+	PGresult* res = PQexecParams(m_Connection, query.c_str(), data.size(), nullptr, paramValues, nullptr, nullptr, 0);
+
+	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+		errorMessage = std::string("Find Record Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		VM_ERROR("Query text was: ", query, "\n");
+		PQclear(res);
+		return false;
+	}
+
+	bool recordExists = (PQntuples(res) > 0);
+	PQclear(res);
+	errorMessage = "No such record exists";
+	return recordExists;
+}
+
+std::vector<std::string> Model::GetPKeys(Table table, std::string& errorMessage)
+{
+	std::string tableName = TableSpecs::GetName(table);
+
+	std::transform(tableName.begin(), tableName.end(), tableName.begin(),
+		[](unsigned char c) { return std::tolower(c); }
+	);
+	std::string query = 
+		"SELECT column_name "
+		"FROM information_schema.key_column_usage "
+		"WHERE constraint_name = ( "
+		"	SELECT constraint_name "
+		"	FROM information_schema.table_constraints "
+		"	WHERE table_name = '" + tableName + 
+		"'	AND constraint_type = 'PRIMARY KEY' "
+		"	) "
+		"ORDER BY ordinal_position; ";
+
+	PGresult* res = PQexec(m_Connection, query.c_str());
+	std::vector<std::string> data;
+	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+		errorMessage = std::string("Get Primary Keys Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		VM_ERROR("Query text was: ", query, "\n");
+		PQclear(res);
+		return data;
+	}
+
+	
+	int32_t rows = PQntuples(res);
+
+	for (int row = 0; row < rows; ++row)
+	{
+		data.emplace_back(PQgetvalue(res, row, 0));	
+	}
+	PQclear(res);
+	errorMessage = "";
+	return data;
+
+}
+
 std::string Model::CreateTableGenre()
 {
 	const char* createTableSQL = 
@@ -76,7 +233,7 @@ std::string Model::CreateTableGenre()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK , "genre");
+	return CheckCreateResult(res, PGRES_COMMAND_OK , "genre");
 }
 
 std::string Model::CreateTableLabel()
@@ -91,7 +248,7 @@ std::string Model::CreateTableLabel()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK, "label");
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "label");
 }
 
 std::string Model::CreateTableSong()
@@ -114,7 +271,7 @@ std::string Model::CreateTableSong()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK, "song");
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "song");
 }
 
 
@@ -128,7 +285,7 @@ std::string Model::CreateTableAlbum()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK, "album");
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "album");
 }
 
 std::string Model::CreateTablePerson()
@@ -143,7 +300,7 @@ std::string Model::CreateTablePerson()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK, "person");
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "person");
 }
 
 std::string Model::CreateTableArtist()
@@ -162,7 +319,7 @@ std::string Model::CreateTableArtist()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK, "artist");
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "artist");
 }
 
 std::string Model::CreateTableArtist_Person()
@@ -180,7 +337,7 @@ std::string Model::CreateTableArtist_Person()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK, "artist_person");
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "artist_person");
 }
 
 std::string Model::CreateTableArtist_Song()
@@ -198,14 +355,14 @@ std::string Model::CreateTableArtist_Song()
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
-	return CheckResult(res, PGRES_COMMAND_OK, "artist_song");
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "artist_song");
 }
 
-std::string Model::CheckResult(PGresult* res, ExecStatusType status, const std::string& text)
+std::string Model::CheckCreateResult(PGresult* res, ExecStatusType status, const std::string& text)
 {
 	if (PQresultStatus(res) != status)
 	{
-		std::string errorMessage = text + std::string(" - Query execution failed:\n") + PQerrorMessage(m_Connection);
+		std::string errorMessage = std::string("Query execution failed for table:\n") + text  + PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
 		PQclear(res);
 		Finish();

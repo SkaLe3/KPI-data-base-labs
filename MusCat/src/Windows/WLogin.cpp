@@ -5,7 +5,7 @@
 
 void WLogin::OnRender()
 {
-	VieM::Window& window = VieM::Application::Get().GetWindow();
+	VieM::Window& window = VieM::Application::GetName().GetWindow();
 	auto [x, y] = window.GetPos();
 	int32_t width = window.GetWidth();
 	int32_t height = window.GetHeight();

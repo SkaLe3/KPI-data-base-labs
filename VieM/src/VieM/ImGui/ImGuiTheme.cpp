@@ -83,8 +83,8 @@ namespace VieM::Utils {
 		defaultTheme->FrameBorderSize = 1.0f;
 		defaultTheme->IndentSpacing = 11.0f;
 
-		Application::Get().GetWindow().GetSettings().AddTheme(defaultTheme, "default");
-		Application::Get().GetWindow().GetSettings().SetTheme("default");
+		Application::GetName().GetWindow().GetSettings().AddTheme(defaultTheme, "default");
+		Application::GetName().GetWindow().GetSettings().SetTheme("default");
 	}
 
 }

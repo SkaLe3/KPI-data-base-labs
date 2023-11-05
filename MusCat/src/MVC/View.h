@@ -3,25 +3,30 @@
 #include <string>
 #include <list>
 #include <Windows/WindowUI.h>
-
+#include "MVC/Tables.h"
+//temp
+#include "VieM/Core/Log.h"
 class Controller;
 
 class View
 {
 public:
-	View() {}
+	View();
 	void OnRender();
 	void AddListener(const std::shared_ptr<Controller>& controller);
-
-	// Error
-	void ShowErrorMessage() { m_ErrorMessage = true; }
-	void HideErrorMessage() { m_ErrorMessage = false; }
 	
-	// Main Window
-	void ShowMainWindow() { m_MainPanelsEnabled = true; }
-	void HideMainWindow() { m_MainPanelsEnabled = false; }
 public:
-	template <class W>
+	template<class W>
+	void Update(std::shared_ptr<TableData> data)
+	{
+		for (std::shared_ptr<IWindowUI> window : m_Windows)
+		{
+			std::shared_ptr<W> win = std::dynamic_pointer_cast<W>(window);
+			if (win)
+				win->Update(data);
+		}
+	}
+	template<class W>
 	void ShowWindow()
 	{
 		for (std::shared_ptr<IWindowUI> window : m_Windows)
@@ -36,6 +41,13 @@ public:
 				window->Hide();
 	}
 	template<class W>
+	std::shared_ptr<IWindowUI>&  GetWindow()
+	{
+		for (std::shared_ptr<IWindowUI>& window : m_Windows)
+			if (std::dynamic_pointer_cast<W>(window))
+				return window;
+	}
+	template<class W>
 	void AddWindow()
 	{
 		std::shared_ptr<IWindowUI> window = std::make_shared<W>();
@@ -45,16 +57,10 @@ public:
 	void RemoveAllWindows();
 
 private:
-	void ErrorMessageRender();
 	void MainWindowRender();
 	void ControlPanelRender();
 private:
 	std::shared_ptr<Controller> m_Controller;
-	
-	bool m_ErrorMessage = false;
-
-	bool m_MainPanelsEnabled = false;
-
 	std::list<std::shared_ptr<IWindowUI>> m_Windows;
 
 	friend class Controller;

@@ -24,7 +24,7 @@ namespace VieM {
 	public:
 		virtual void OnAttach() override
 		{
-			Application* app = &Application::Get();
+			Application* app = &Application::GetName();
 			image = std::make_unique<Image>("assets/images/cat.png");
 			UI::Theme* defaultTheme = app->GetWindow().GetSettings().GetCurrentTheme();
 			editTheme = new VieM::UI::Theme(*defaultTheme);
@@ -32,7 +32,7 @@ namespace VieM {
 			serializer = new UI::ThemeSerializer(editTheme);
 			app->GetWindow().SetVSync(0);
 
-			Application::Get().GetWindow().GetTitlebar().SetMenubarCallback([app]()
+			Application::GetName().GetWindow().GetTitlebar().SetMenubarCallback([app]()
 				{
 					if (ImGui::BeginMenu("File"))
 					{
@@ -107,7 +107,7 @@ namespace VieM {
 			{
 				ImGui::Begin("Theme Editor");
 				if (ImGui::Button("Reset to default"))
-					Application::Get().GetWindow().GetSettings().SetTheme("default");
+					Application::GetName().GetWindow().GetSettings().SetTheme("default");
 				ImGui::SameLine();
 				if (ImGui::Button("Save"))
 					serializer->Serialize();

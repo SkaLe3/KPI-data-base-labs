@@ -63,7 +63,7 @@ namespace VieM {
 		//style.FrameRounding = 6.0f;
 		//style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
 		 
-		auto& settings = Application::Get().GetWindow().GetSettings();
+		auto& settings = Application::GetName().GetWindow().GetSettings();
 		// Load default font
 		ImFontConfig fontConfig;
 		fontConfig.FontDataOwnedByAtlas = false;

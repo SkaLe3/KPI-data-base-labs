@@ -50,7 +50,7 @@ namespace VieM {
 		ApplicationSpecification& GetSpecifications() { return m_Specification; }
 
 		Window& GetWindow() const { return *m_Window; }
-		static Application& Get();
+		static Application& GetName();
 
 		template<typename Func>
 		void QueueEvent(Func&& func)

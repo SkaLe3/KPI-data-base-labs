@@ -12,5 +12,5 @@ public:
 	virtual void SetCallbackObject(std::shared_ptr<Controller>& callback) { m_Callback = callback; }
 protected:
 	std::shared_ptr<Controller> m_Callback;
-	bool m_NotHidden;
+	bool m_NotHidden = false;
 };

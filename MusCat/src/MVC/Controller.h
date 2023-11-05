@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include "View.h"
+#include "MVC/Tables.h"
 class Model;
 
 class Controller : public std::enable_shared_from_this<Controller>
@@ -14,6 +15,21 @@ public:
 	void OnUpdate();
 	void Run();
 	void OnLogin(const std::string& username, const std::string& password);
+
+	void OnShowSelections();
+	void OnShowManagement();
+
+	void OnAddRecord(Table tableIndex);
+	void OnEditRecord(Table tableIndex);
+	void OnDeleteRecord();
+	void OnGenerateData();
+
+	void OnAddRecordSubmit(Table id, std::vector<std::string> data);
+	void OnUpdateRecordSubmit(Table id, std::vector<std::string> data);
+
+	void OnSelectedTabChanged(Table tabIdex);
+	bool OnFindRecord(Table id, std::vector<Column> columns, std::vector<std::string> data);
+
 	std::string& GetErrorMessage() { return m_ErrorMessageText; }
 public:
 	void CreateWindows();
@@ -33,6 +49,7 @@ private:
 	std::shared_ptr<View> m_View;
 
 	std::string m_ErrorMessageText;
+
 
 
 };

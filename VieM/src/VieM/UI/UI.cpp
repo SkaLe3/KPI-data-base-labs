@@ -225,7 +225,7 @@ namespace VieM::UI {
 
 	void TitleBar::Draw(float& outTitlebarHeight)
 	{
-		const bool isMaximized = Application::Get().GetWindow().IsMaximized();
+		const bool isMaximized = Application::GetName().GetWindow().IsMaximized();
 		const ImVec2 windowPadding = ImGui::GetCurrentWindow()->WindowPadding;
 
 		ImGui::SetCursorPos(ImVec2(windowPadding.x, windowPadding.y + VerticalOffset));
@@ -275,9 +275,9 @@ namespace VieM::UI {
 		{
 			// Centered Window title
 			ImVec2 currentCursorPos = ImGui::GetCursorPos();
-			ImVec2 textSize = ImGui::CalcTextSize(Application::Get().GetSpecifications().Name.c_str());
+			ImVec2 textSize = ImGui::CalcTextSize(Application::GetName().GetSpecifications().Name.c_str());
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - textSize.x * 0.5f, VerticalTitleOffset + windowPadding.y));
-			ImGui::Text("%s", Application::Get().GetSpecifications().Name.c_str()); // Draw title
+			ImGui::Text("%s", Application::GetName().GetSpecifications().Name.c_str()); // Draw title
 			ImGui::SetCursorPos(currentCursorPos);
 		}
 
@@ -299,9 +299,9 @@ namespace VieM::UI {
 			if (ImGui::InvisibleButton("Minimize", ImVec2(ButtonSize.x, ButtonSize.y)))
 			{
 				// TODO: move this stuff to a better place, like Window class
-				if (Application::Get().GetWindow().GetNativeWindow())
+				if (Application::GetName().GetWindow().GetNativeWindow())
 				{
-					Application::Get().QueueEvent([windowHandle = Application::Get().GetWindow().GetNativeWindow()]() { glfwIconifyWindow(windowHandle); });
+					Application::GetName().QueueEvent([windowHandle = Application::GetName().GetWindow().GetNativeWindow()]() { glfwIconifyWindow(windowHandle); });
 				}
 			}
 
@@ -320,7 +320,7 @@ namespace VieM::UI {
 
 			if (ImGui::InvisibleButton("Maximize", ImVec2(ButtonSize.x, ButtonSize.y)))
 			{
-				Application::Get().QueueEvent([isMaximized, windowHandle = m_WindowHandle->GetNativeWindow()]()
+				Application::GetName().QueueEvent([isMaximized, windowHandle = m_WindowHandle->GetNativeWindow()]()
 					{
 						if (isMaximized)
 							glfwRestoreWindow(windowHandle);
@@ -339,7 +339,7 @@ namespace VieM::UI {
 			const int iconWidth = m_IconClose->GetWidth();
 			const int iconHeight = m_IconClose->GetHeight();
 			if (ImGui::InvisibleButton("Close", ImVec2(ButtonSize.x, ButtonSize.y)))
-				Application::Get().Close();
+				Application::GetName().Close();
 
 			Utils::DrawButtonImage(m_IconClose, Utils::Colors::Theme::text, Utils::Colors::ColorWithMultipliedValue(Utils::Colors::Theme::text, 1.4f), buttonColP);
 		}
@@ -362,7 +362,7 @@ namespace VieM::UI {
 			const float logoHorizontalOffset = MenubarOffsetValues.x * 2.0f + MenubarOffsetValues.x * 3 + ImGui::GetCurrentWindow()->WindowPadding.x;
 			ImGui::SetCursorPos(ImVec2(logoHorizontalOffset, MenubarOffsetValues.y + VerticalOffset));
 
-			if (Application::Get().GetSpecifications().CustomTitleBar)
+			if (Application::GetName().GetSpecifications().CustomTitleBar)
 			{
 				const ImRect menuBarRect = { ImGui::GetCursorPos(), { ImGui::GetContentRegionAvail().x + ImGui::GetCursorScreenPos().x, ImGui::GetFrameHeightWithSpacing() } };
 

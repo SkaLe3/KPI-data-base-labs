@@ -9,7 +9,7 @@
 void AppLayer::OnAttach()
 {
 	using namespace std;
-	VieM::Application* app = &VieM::Application::Get();
+	VieM::Application* app = &VieM::Application::GetName();
 	app->GetWindow().GetTitlebar().SetMenubarCallback([app, this]()
 		{
 			if (ImGui::BeginMenu("File"))

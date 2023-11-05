@@ -106,7 +106,7 @@ namespace VieM {
 		}
 	}
 
-	Application& Application::Get()
+	Application& Application::GetName()
 	{
 		return *s_Instance;
 	}

@@ -25,7 +25,7 @@ void SettingsPanel::OnRender()
 		{
 		case 0:
 		{
-			auto& settings = VieM::Application::Get().GetWindow().GetSettings();
+			auto& settings = VieM::Application::GetName().GetWindow().GetSettings();
 			settings.SetTheme("default");
 			break;
 		}
