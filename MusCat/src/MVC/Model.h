@@ -10,10 +10,13 @@ public:
 	void Finish();
 	bool Connect(const std::string& username, const std::string& password, std::string& errorMessage);
 	bool CreateTables(std::string& errorMessage);
-	std::shared_ptr<TableData> FetchTableData(Table table, std::string& errorMessage);
-	bool AddRecord(Table table, std::vector<std::string> data, std::string& errorMessage);
+	std::shared_ptr<TableData> FetchTableData(Table table, std::vector<std::string> pkeysTitles, std::string& errorMessage);
 
-	bool IsRecordExists(Table table, std::vector<Column> columns, std::vector<std::string> data, std::string& errorMessage);
+
+	bool AddRecord(Table table, std::vector<std::string> data, std::string& errorMessage);
+	bool UpdateRecord(Table table, std::vector<std::string> data, std::vector<Column> keys,std::vector<std::string> oldData, std::string& errorMessage);
+
+	std::vector<std::string> GetRecordIfExists(Table table, std::vector<Column> columns, std::vector<std::string> data, std::string& errorMessage);
 	std::vector<std::string> GetPKeys(Table table, std::string& errorMessage);
 
 private:

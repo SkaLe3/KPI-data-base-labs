@@ -16,8 +16,8 @@ public:
 	void AddListener(const std::shared_ptr<Controller>& controller);
 	
 public:
-	template<class W>
-	void Update(std::shared_ptr<TableData> data)
+	template<class W, class T>
+	void Update(std::shared_ptr<T> data)
 	{
 		for (std::shared_ptr<IWindowUI> window : m_Windows)
 		{
@@ -26,6 +26,7 @@ public:
 				win->Update(data);
 		}
 	}
+
 	template<class W>
 	void ShowWindow()
 	{

@@ -25,7 +25,7 @@ public:
 	void OnGenerateData();
 
 	void OnAddRecordSubmit(Table id, std::vector<std::string> data);
-	void OnUpdateRecordSubmit(Table id, std::vector<std::string> data);
+	void OnUpdateRecordSubmit(Table id, std::vector<std::string> data, std::vector<Column> keys, std::vector<std::string> keysData);
 
 	void OnSelectedTabChanged(Table tabIdex);
 	bool OnFindRecord(Table id, std::vector<Column> columns, std::vector<std::string> data);

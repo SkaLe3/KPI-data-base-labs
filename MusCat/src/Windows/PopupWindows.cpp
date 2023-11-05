@@ -159,18 +159,19 @@ void WEditRecord::OnRender()
 			}
 			ImGui::EndTable();
 		}
-
+		ImGui::TextColored({ 0.5f, 0.7f, 0.5f, 1.0f }, "Record Found");
 		ImVec2 buttonSize(ImGui::GetContentRegionAvail().x, 40);
 		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMin().x, ImGui::GetWindowContentRegionMax().y - buttonSize.y));
 		if (ImGui::Button("Submit", buttonSize))
 		{
 
-			m_Callback->OnUpdateRecordSubmit(m_SelectionContext, m_TextBuffer);
+			m_Callback->OnUpdateRecordSubmit(m_SelectionContext, m_TextBuffer, m_Keys, m_KeysData);
 		}
 
 	}
 	else
 	{
+		ImGui::Text("\t\t\t\t\t\tFind Record To Update");
 		if (ImGui::BeginTable(TableSpecs::GetName(m_SelectionContext).c_str(), m_Keys.size(), m_TableFlags))
 		{
 
@@ -217,10 +218,35 @@ void WEditRecord::OnRender()
 		if (ImGui::Button("Find Record", buttonSize))
 		{
 
-			m_RowExist =  m_Callback->OnFindRecord(m_SelectionContext, m_Keys,m_TextKeys);
+			m_RowExist = m_Callback->OnFindRecord(m_SelectionContext, m_Keys,m_TextKeys);
+			m_KeysData = m_TextKeys;
+			
 		}
 	}
 	ImGui::End();
+}
+
+void WEditRecord::Update(std::shared_ptr<std::vector<std::string>> data)
+{
+
+	m_TextBuffer = *data;
+
+	auto IsNumber = [](const std::string& inputString)
+	{
+		bool isnumber = true;
+		for (char c : inputString)
+		{
+			if (!std::isdigit(c))
+				isnumber = false;
+		}
+		return isnumber && !inputString.empty();
+	};
+
+	for (int32_t i = 0; i < m_TextBuffer.size(); i++)
+	{
+		if (IsNumber(m_TextBuffer[i]))
+			m_IntBuffer[i] = std::stoi(m_TextBuffer[i]);
+	}
 }
 
 void WEditRecord::SetSelectionContext(Table id, const std::vector<Column>& keys)

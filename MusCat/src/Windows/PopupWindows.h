@@ -38,9 +38,11 @@ class WEditRecord : public PopupTableManagement, public IWindowUI
 public:
 	WEditRecord() : PopupTableManagement() {}
 	virtual void OnRender() override;
-	 void SetSelectionContext(Table id, const std::vector<Column>& keys);
+	void Update(std::shared_ptr<std::vector<std::string>> data);
+	void SetSelectionContext(Table id, const std::vector<Column>& keys);
 	
 	std::vector<Column> m_Keys;
+	std::vector<std::string> m_KeysData;
 	bool m_RowExist = false;
 
 	std::vector<std::string> m_TextKeys;

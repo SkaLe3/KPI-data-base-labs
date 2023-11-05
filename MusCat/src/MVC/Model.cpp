@@ -69,9 +69,17 @@ bool Model::CreateTables(std::string& errorMessage)
 	return errorMessage.empty();
 }
 
-std::shared_ptr<TableData> Model::FetchTableData(Table table, std::string& errorMessage)
+std::shared_ptr<TableData> Model::FetchTableData(Table table, std::vector<std::string> pkeysTitle, std::string& errorMessage)
 {
 	std::string query = "SELECT * FROM " + TableSpecs::GetName(table);
+	query += " ORDER BY ";
+	for (size_t i = 0; i < pkeysTitle.size(); ++i)
+	{
+		if (i > 0)
+			query += ", ";
+		query += pkeysTitle[i];
+	}
+	query += ";";
 	PGresult* result = PQexecParams(m_Connection, query.c_str(), 0, NULL, NULL, NULL, NULL, 0);
 
 	std::shared_ptr<TableData> data = std::make_shared<TableData>();
@@ -99,6 +107,7 @@ std::shared_ptr<TableData> Model::FetchTableData(Table table, std::string& error
 	errorMessage = "";
 	return data;
 }
+
 
 bool Model::AddRecord(Table table, std::vector<std::string> data, std::string& errorMessage)
 {
@@ -149,9 +158,58 @@ bool Model::AddRecord(Table table, std::vector<std::string> data, std::string& e
 	return true;
 }
 
-bool Model::IsRecordExists(Table table, std::vector<Column> columns, std::vector<std::string> data, std::string& errorMessage)
+bool Model::UpdateRecord(Table table, std::vector<std::string> data, std::vector<Column> keys, std::vector<std::string> oldData, std::string& errorMessage)
 {
+	std::string query =
+		"UPDATE " + TableSpecs::GetName(table) + " SET ";
 
+	std::vector<Column> columns = TableSpecs::GetColumns(table);
+
+
+	for (size_t i = 0; i < columns.size(); ++i)
+	{
+
+		if (columns[i].Type == ColumnType::Serial)
+			continue;
+		query += columns[i].Name + " = ";
+		if (data[i].empty())
+			query += "NULL";
+		else
+			query += "'" + data[i] + "'";
+		if (columns.size() - i != 1)
+			query += ", ";
+
+	}
+
+	query += " WHERE ";
+
+	for (size_t i = 0; i < keys.size(); ++i)
+	{
+		if (i > 0) 
+			query += " AND ";
+
+		query += keys[i].Name + " = ";
+		query += "'" + oldData[i] + "'";
+	}
+	query += ";";
+	
+	PGresult* res = PQexec(m_Connection, query.c_str());
+
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+		errorMessage = std::string("Update Record Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		VM_ERROR("Query text was: ", query, "\n");
+		PQclear(res);
+		return false;
+	}
+
+	PQclear(res);
+	return true;
+}
+
+std::vector<std::string> Model::GetRecordIfExists(Table table, std::vector<Column> columns, std::vector<std::string> data, std::string& errorMessage)
+{
 	std::string query = "SELECT * FROM " + TableSpecs::GetName(table) + " WHERE ";
 	for (size_t i = 0; i < columns.size(); ++i) {
 		if (i > 0) {
@@ -168,18 +226,26 @@ bool Model::IsRecordExists(Table table, std::vector<Column> columns, std::vector
 
 	PGresult* res = PQexecParams(m_Connection, query.c_str(), data.size(), nullptr, paramValues, nullptr, nullptr, 0);
 
+	std::vector<std::string> recordData;
+
 	if (PQresultStatus(res) != PGRES_TUPLES_OK) {
 		errorMessage = std::string("Find Record Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
 		VM_ERROR("Query text was: ", query, "\n");
 		PQclear(res);
-		return false;
+		return recordData;
 	}
 
-	bool recordExists = (PQntuples(res) > 0);
+	int32_t dataColumns = PQnfields(res);
+
+	for (int col = 0; col < dataColumns; ++col)
+	{
+		recordData.emplace_back(PQgetvalue(res, 0, col));
+	}
+
 	PQclear(res);
 	errorMessage = "No such record exists";
-	return recordExists;
+	return recordData;
 }
 
 std::vector<std::string> Model::GetPKeys(Table table, std::string& errorMessage)

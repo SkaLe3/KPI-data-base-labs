@@ -24,6 +24,7 @@ void Controller::Run()
 {
 	CreateWindows();
 	ShowWindow<WLogin>();
+
 }
 
 void Controller::OnLogin(const std::string& username, const std::string& password)
@@ -133,14 +134,22 @@ void Controller::OnAddRecordSubmit(Table id,std::vector<std::string> data)
 	}
 }
 
-void Controller::OnUpdateRecordSubmit(Table id, std::vector<std::string> data)
+void Controller::OnUpdateRecordSubmit(Table id, std::vector<std::string> data, std::vector<Column> keys, std::vector<std::string> keysData)
 {
-
+	bool success = m_Model->UpdateRecord(id, data, keys, keysData, m_ErrorMessageText);
+	if (!success)
+		ShowWindow<WError>();
+	else
+	{
+		OnSelectedTabChanged(id);
+	}
 }
 
 void Controller::OnSelectedTabChanged(Table tabIndex)
 {
-	std::shared_ptr<TableData> data = m_Model->FetchTableData(tabIndex, m_ErrorMessageText);
+	std::vector<std::string> pkeys = m_Model->GetPKeys(tabIndex, m_ErrorMessageText);
+
+	std::shared_ptr<TableData> data = m_Model->FetchTableData(tabIndex, pkeys, m_ErrorMessageText);
 	if (data->empty() && !m_ErrorMessageText.empty())
 		ShowWindow<WError>();
 	else
@@ -153,11 +162,13 @@ void Controller::OnSelectedTabChanged(Table tabIndex)
 bool Controller::OnFindRecord(Table id, std::vector<Column> columns, std::vector<std::string> data)
 {
 	HideWindow<WError>();
-	bool exists = m_Model->IsRecordExists(id,columns, data, m_ErrorMessageText);
-	if (!exists)
+	std::vector<std::string> recordData = m_Model->GetRecordIfExists(id,columns, data, m_ErrorMessageText);
+	if (recordData.empty())
 		ShowWindow<WError>();
+	else
+		m_View->Update<WEditRecord, std::vector<std::string>>(std::make_shared<std::vector<std::string>>(recordData));
 
-	return exists;
+	return !recordData.empty();
 }
 
 void Controller::CreateWindows()
