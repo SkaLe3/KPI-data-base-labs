@@ -1,4 +1,4 @@
-#include "WDataSelection.h"
+#include "DataSelection.h"
 #include <imgui/imgui.h>
 #include "MVC/Controller.h"
 
@@ -53,19 +53,55 @@ void WDataSelection::OnRender()
 void WDataSelection::SelectionPanel()
 {
 	ImGui::Begin("Selection Panel", NULL);
-
+	ImGui::Spacing();
+	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));
+	ImGui::PushItemWidth(100);
+	ImGui::Text("Persons under"); ImGui::SameLine();
+	static int age =0;
+	ImGui::InputInt("##age", &age, 1, 1); ImGui::SameLine();
+	ImGui::Text("years");
+	ImGui::Text("With more than"); ImGui::SameLine();
+	static int songs=0;
+	ImGui::InputInt("##songs", &songs, 1, 1); ImGui::SameLine();
+	ImGui::Text("songs");
+	ImGui::Text("Of"); ImGui::SameLine();
 
-	ImGui::Button("Select 1", ImVec2(300, 40));
+
+	const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" };
+	static int item_current_idx = 0; // Here we store our selection data as an index.
+	const char* combo_preview_value = items[item_current_idx];  // Pass in the preview value visible before opening the combo (it could be anything)
+
+	if (ImGui::BeginCombo("##combo genre", combo_preview_value))
+	{
+		for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+		{
+			const bool is_selected = (item_current_idx == n);
+			if (ImGui::Selectable(items[n], is_selected))
+				item_current_idx = n;
+
+			// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+	ImGui::SameLine();
+	ImGui::Text("genre");
+	ImGui::PopItemWidth();
+	ImGui::PushItemWidth(300);
+	ImGui::Button("Select", ImVec2(300, 40));
+	ImGui::Spacing(); ImGui::Separator();
+
+
 	ImGui::Button("Select 2", ImVec2(300, 40));
 	ImGui::Button("Select 3", ImVec2(300, 40));
 
 	ImGui::Separator();
 
-	ImGui::PushItemWidth(300);
 
+	
 	ImGui::PopItemWidth();
-
 
 
 
@@ -78,3 +114,4 @@ void WDataSelection::SelectionPanel()
 
 	ImGui::End();
 }
+

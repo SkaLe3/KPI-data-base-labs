@@ -10,6 +10,9 @@ class PopupTableManagement
 public:
 	PopupTableManagement();
 	void SetSelectionContext(Table id);
+	int32_t CenterNextWindow(bool flag, int32_t width);
+	void DrawEditRecord(int32_t width);
+	void DrawFindRecord(int32_t width, std::vector<Column> keyColumns, std::vector<std::string>& textKeysData, std::vector<int32_t>& intKeysData);
 protected:
 	Table m_SelectionContext;
 
@@ -20,39 +23,3 @@ protected:
 	std::vector<int32_t> m_IntBuffer;
 };
 
-
-class WAddRecord :  public PopupTableManagement, public IWindowUI
-{
-public:
-	WAddRecord() : PopupTableManagement() {}
-	virtual void OnRender() override;
-
-
-private:
-
-
-};
-
-class WEditRecord : public PopupTableManagement, public IWindowUI
-{
-public:
-	WEditRecord() : PopupTableManagement() {}
-	virtual void OnRender() override;
-	void Update(std::shared_ptr<std::vector<std::string>> data);
-	void SetSelectionContext(Table id, const std::vector<Column>& keys);
-	
-	std::vector<Column> m_Keys;
-	std::vector<std::string> m_KeysData;
-	bool m_RowExist = false;
-
-	std::vector<std::string> m_TextKeys;
-	std::vector<int32_t> m_IntKeys;
-
-};
-
-class WDeleteRecord : public IWindowUI
-{
-public:
-	virtual void OnRender() override;
-
-};

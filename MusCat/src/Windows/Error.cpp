@@ -1,4 +1,4 @@
-#include "WError.h"
+#include "Error.h"
 #include <VieM/Core/Application.h>
 #include <imgui/imgui.h>
 #include "MVC/Controller.h"

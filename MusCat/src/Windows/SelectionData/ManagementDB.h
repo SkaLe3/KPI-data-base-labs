@@ -1,5 +1,5 @@
 #pragma once
-#include "WindowUI.h"
+#include "Windows/WindowUI.h"
 #include "MVC/Tables.h"
 
 //temp
@@ -24,6 +24,8 @@ private:
 	int32_t m_GenerateRowsCount = 0;
 
 	std::shared_ptr<TableData> m_TableData;
+
+	double m_GenerateTime = 0;
 
 private:
 };

@@ -19,16 +19,17 @@ public:
 	void OnShowSelections();
 	void OnShowManagement();
 
-	void OnAddRecord(Table tableIndex);
-	void OnEditRecord(Table tableIndex);
-	void OnDeleteRecord();
-	void OnGenerateData();
+	void OnCreateRecord(Table id);
+	void OnUpdateRecord(Table id);
+	void OnDeleteRecord(Table id);
+	double OnGenerateData(Table id, int32_t rowCount);
 
-	void OnAddRecordSubmit(Table id, std::vector<std::string> data);
-	void OnUpdateRecordSubmit(Table id, std::vector<std::string> data, std::vector<Column> keys, std::vector<std::string> keysData);
+	void OnCreateRecordSubmit(Table id, std::vector<std::string> recordData);
+	void OnUpdateRecordSubmit(Table id, std::vector<std::string> recordData, std::vector<Column> pkeyColumns, std::vector<std::string> pkeysData);
+	void OnDeleteRecordSubmit(Table id, std::vector<Column> pkeyColumns, std::vector<std::string> pkeysData);
 
-	void OnSelectedTabChanged(Table tabIdex);
-	bool OnFindRecord(Table id, std::vector<Column> columns, std::vector<std::string> data);
+	void OnFetchData(Table id);
+	bool OnFindRecord(Table id, std::vector<Column> columns, std::vector<std::string> data, IWindowUI* sender);
 
 	std::string& GetErrorMessage() { return m_ErrorMessageText; }
 public:

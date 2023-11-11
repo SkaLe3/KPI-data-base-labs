@@ -16,6 +16,13 @@ enum class Table : uint8_t
 	Artist_Song
 };
 
+enum class AuxiliaryTable : uint8_t
+{
+	name = 0,
+	surname,
+	words
+};
+
 enum class ColumnType : uint8_t
 {
 	Serial = 0,
@@ -37,6 +44,17 @@ class TableSpecs
 public:
 	static std::string GetName(Table index) { return s_Names[(uint8_t)index]; }
 	static std::vector<Column> GetColumns(Table index) { return s_Columns[(uint8_t)index]; }
+
+private:
+	static std::vector<std::string> s_Names;
+	static std::vector<std::vector<Column>> s_Columns;
+};
+
+class AuxiliaryTableSpecs
+{
+public:
+	static std::string GetName(AuxiliaryTable index) { return s_Names[(uint8_t)index]; }
+	static std::vector<Column> GetColumns(AuxiliaryTable index) { return s_Columns[(uint8_t)index]; }
 
 private:
 	static std::vector<std::string> s_Names;

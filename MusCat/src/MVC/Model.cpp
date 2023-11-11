@@ -26,6 +26,8 @@ bool Model::Connect(const std::string& username, const std::string& password, st
 		return false;
 	}
 	errorMessage = "";
+	m_SampleDataStorage.SetConnection(m_Connection);
+	m_Generator.SetConnection(m_Connection);
 	return true;
 }
 
@@ -69,28 +71,29 @@ bool Model::CreateTables(std::string& errorMessage)
 	return errorMessage.empty();
 }
 
-std::shared_ptr<TableData> Model::FetchTableData(Table table, std::vector<std::string> pkeysTitle, std::string& errorMessage)
+std::shared_ptr<TableData> Model::FetchTableData(Table table, std::vector<std::string> pkeysTitles, std::string& errorMessage)
 {
 	std::string query = "SELECT * FROM " + TableSpecs::GetName(table);
 	query += " ORDER BY ";
-	for (size_t i = 0; i < pkeysTitle.size(); ++i)
+	for (size_t i = 0; i < pkeysTitles.size(); ++i)
 	{
 		if (i > 0)
 			query += ", ";
-		query += pkeysTitle[i];
+		query += pkeysTitles[i];
 	}
 	query += ";";
-	PGresult* result = PQexecParams(m_Connection, query.c_str(), 0, NULL, NULL, NULL, NULL, 0);
+	PGresult* result = PQexec(m_Connection, query.c_str());
 
 	std::shared_ptr<TableData> data = std::make_shared<TableData>();
 
 	if (PQresultStatus(result) != PGRES_TUPLES_OK)
 	{
-		errorMessage = std::string("Select Query execution failed for table:\n") + TableSpecs::GetName(table) + PQerrorMessage(m_Connection);
+		errorMessage = std::string("Select all Data Query execution failed for table:\n") + TableSpecs::GetName(table) + PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
 		PQclear(result);
 		return data;
 	}
+
 	int32_t rows = PQntuples(result);
 	int32_t columns = PQnfields(result);
 	
@@ -109,47 +112,45 @@ std::shared_ptr<TableData> Model::FetchTableData(Table table, std::vector<std::s
 }
 
 
-bool Model::AddRecord(Table table, std::vector<std::string> data, std::string& errorMessage)
+bool Model::CreateRecord(Table table, std::vector<std::string> data, std::string& errorMessage)
 {
-
-
-	std::stringstream ss;
-	ss << "INSERT INTO " << TableSpecs::GetName(table) << " (";
+	std::string query;
+	query+= "INSERT INTO " + TableSpecs::GetName(table) + " (";
 	auto columns = TableSpecs::GetColumns(table);
 	for (int32_t col = 0, size = columns.size(); col < size; col++)
 	{
 		if (columns[col].Type == ColumnType::Serial)
 			continue;
-		ss << columns[col].Name;
+		query += columns[col].Name;
 		if (size - col != 1)
-			ss << ",";
+			query += ",";
 	}
-	ss << ") VALUES (";
+	query += ") VALUES (";
 	for (int32_t col = 0, size = data.size(); col < size; col++)
 	{
 		if (columns[col].Type == ColumnType::Serial)
 			continue;
 		if (data[col].empty())
 		{
-			ss << "NULL";
+			query += "NULL";
 		}
 		else 
 		{
-		ss << "'" << data[col] << "'";
+			query += "'" + data[col] + "'";
 		}
 		if (size - col != 1)
-			ss << ",";
+			query += ",";
 	}
-	ss << ")";
+	query += ")";
 
 
-	PGresult* result = PQexec(m_Connection, ss.str().c_str());
+	PGresult* result = PQexec(m_Connection, query.c_str());
 
 	if (PQresultStatus(result) != PGRES_COMMAND_OK) {
 		
 		errorMessage = std::string("Insert Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
-		VM_ERROR("Query text was: ", ss.str(), "\n");
+		VM_ERROR("Query text was: ", query, "\n");
 		PQclear(result);
 		return false;
 	}
@@ -160,8 +161,7 @@ bool Model::AddRecord(Table table, std::vector<std::string> data, std::string& e
 
 bool Model::UpdateRecord(Table table, std::vector<std::string> data, std::vector<Column> keys, std::vector<std::string> oldData, std::string& errorMessage)
 {
-	std::string query =
-		"UPDATE " + TableSpecs::GetName(table) + " SET ";
+	std::string query = "UPDATE " + TableSpecs::GetName(table) + " SET ";
 
 	std::vector<Column> columns = TableSpecs::GetColumns(table);
 
@@ -198,6 +198,35 @@ bool Model::UpdateRecord(Table table, std::vector<std::string> data, std::vector
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
 		errorMessage = std::string("Update Record Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		VM_ERROR("Query text was: ", query, "\n");
+		PQclear(res);
+		return false;
+	}
+
+	PQclear(res);
+	return true;
+}
+
+bool Model::DeleteRecord(Table table, std::vector<Column> pkeyColumns, std::vector<std::string> pkeysData, std::string& errorMessage)
+{
+	std::string query = "DELETE FROM " + TableSpecs::GetName(table) + " WHERE ";
+
+	for (size_t i = 0; i < pkeyColumns.size(); ++i)
+	{
+		if (i > 0)
+			query += " AND ";
+
+		query += pkeyColumns[i].Name + " = ";
+		query += "'" + pkeysData[i] + "'";
+	}
+	query += ";";
+
+	PGresult* res = PQexec(m_Connection, query.c_str());
+
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+		errorMessage = std::string("Delete Record Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
 		VM_ERROR("Query text was: ", query, "\n");
 		PQclear(res);
@@ -248,7 +277,7 @@ std::vector<std::string> Model::GetRecordIfExists(Table table, std::vector<Colum
 	return recordData;
 }
 
-std::vector<std::string> Model::GetPKeys(Table table, std::string& errorMessage)
+std::vector<std::string> Model::GetPKeyColumnTitles(Table table, std::string& errorMessage)
 {
 	std::string tableName = TableSpecs::GetName(table);
 
@@ -289,6 +318,96 @@ std::vector<std::string> Model::GetPKeys(Table table, std::string& errorMessage)
 
 }
 
+bool Model::GenerateData(Table table,int32_t rowCount, std::string& errorMessage)
+{
+	bool success = true;
+	switch (table)
+	{
+	case Table::Genre:
+		success &= m_Generator.GenerateGenres(m_SampleDataStorage.GetGenres(), errorMessage);
+		break;
+	case Table::Label:
+		success &= m_Generator.GenerateLabels(m_SampleDataStorage.GetLabels(), m_SampleDataStorage.GetLocations(), errorMessage);
+		break;
+	case Table::Album:
+		success &= m_Generator.GenerateAlbums(rowCount, errorMessage);
+		break;
+	case Table::Song:
+	{
+		bool notempty = CheckTableMinRecords(Table::Genre, 1);
+		if (notempty)
+			success &= m_Generator.GenerateSong(rowCount, errorMessage);
+		else {
+			success = false;
+			errorMessage += "\n\nYou need at least 1 genre to exist to generate songs";
+		}
+		break;
+	}
+	case Table::Person:
+		success &= m_Generator.GeneratePerson(rowCount, errorMessage);
+		break;
+	case Table::Artist:
+		success &= m_Generator.GenerateArtist(rowCount, errorMessage);
+		break;
+	case Table::Artist_Person:
+	{
+
+		if (CheckTableMinRecords(Table::Artist, 1) && CheckTableMinRecords(Table::Person, 1))
+			success &= m_Generator.GenerateArtist_Person(rowCount, errorMessage);
+		else {
+			success = false;
+			errorMessage += "\n\nYou need at least 1 artist and 1 person to exist to generate artist-person relation";
+		}
+		break;
+	}
+	case Table::Artist_Song:
+	{
+		if (CheckTableMinRecords(Table::Artist, 1) && CheckTableMinRecords(Table::Song, 1))
+			success &= m_Generator.GenerateArtist_Song(rowCount, errorMessage);
+		else {
+			success = false;
+			errorMessage += "\n\nYou need at least 1 artist and 1 song to exist to generate artist-song relation";
+		}
+		break;
+	}
+
+	}
+	return success;
+}
+
+bool Model::CheckTableMinRecords(Table table, int32_t count)
+{
+	std::string tableName = TableSpecs::GetName(table);
+	std::string query = "SELECT count(*) FROM " + tableName + ";";
+
+	PGresult* result = PQexec(m_Connection, query.c_str());
+
+	if (PQresultStatus(result) != PGRES_TUPLES_OK)
+	{
+		std::string errorMessage = std::string("Failed to check table emptiness:  ") + TableSpecs::GetName(table) +  "\n" + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		PQclear(result);
+		return false;
+	}
+
+	if (atoi(PQgetvalue(result, 0, 0)) >= count)
+		return true;
+	return false;
+
+}
+
+bool Model::LoadTestDataSamples(std::string& errorMessage)
+{
+	errorMessage = "Failed to load test data samples";
+	return m_SampleDataStorage.LoadFiles();
+}
+
+bool Model::CreateAuxiliaryTablesForTestData(std::string& errorMessage)
+{
+	errorMessage = "Failed to create auxiliary tables";
+	return m_SampleDataStorage.CreateTables();
+}
+
 std::string Model::CreateTableGenre()
 {
 	const char* createTableSQL = 
@@ -317,30 +436,6 @@ std::string Model::CreateTableLabel()
 	return CheckCreateResult(res, PGRES_COMMAND_OK, "label");
 }
 
-std::string Model::CreateTableSong()
-{
-	const char* createTableSQL = 
-		"CREATE TABLE IF NOT EXISTS song ("
-		"song_id serial NOT NULL,"
-		"title character varying(64) NOT NULL,"
-		"release_date date NOT NULL,"
-		"label_id integer,"
-		"genre_id integer NOT NULL,"
-		"album_id integer,"
-		"CONSTRAINT song_id_pk PRIMARY KEY (song_id),"
-		"CONSTRAINT song_album_id_fk FOREIGN KEY (album_id)"
-			"REFERENCES public.album (album_id),"
-		"CONSTRAINT song_genre_id_fk FOREIGN KEY (genre_id)"
-			"REFERENCES public.genre (genre_id),"
-		"CONSTRAINT song_label_id_fk FOREIGN KEY (label_id)"
-			"REFERENCES public.label (label_id))";
-
-	PGresult* res = PQexec(m_Connection, createTableSQL);
-
-	return CheckCreateResult(res, PGRES_COMMAND_OK, "song");
-}
-
-
 std::string Model::CreateTableAlbum()
 {
 	const char* createTableSQL =
@@ -353,6 +448,31 @@ std::string Model::CreateTableAlbum()
 
 	return CheckCreateResult(res, PGRES_COMMAND_OK, "album");
 }
+
+std::string Model::CreateTableSong()
+{
+	const char* createTableSQL = 
+		"CREATE TABLE IF NOT EXISTS song ("
+		"song_id serial NOT NULL,"
+		"title character varying(64) NOT NULL,"
+		"release_date date NOT NULL,"
+		"label_id integer,"
+		"genre_id integer NOT NULL,"
+		"album_id integer,"
+		"CONSTRAINT song_id_pk PRIMARY KEY (song_id), "
+		"CONSTRAINT song_album_id_fk FOREIGN KEY (album_id) "
+			"REFERENCES public.album(album_id) ON DELETE CASCADE, "
+		"CONSTRAINT song_genre_id_fk FOREIGN KEY (genre_id) "
+			"REFERENCES public.genre(genre_id) ON DELETE RESTRICT, "
+		"CONSTRAINT song_label_id_fk FOREIGN KEY (label_id) "
+			"REFERENCES public.label(label_id) ON DELETE CASCADE);";
+
+	PGresult* res = PQexec(m_Connection, createTableSQL);
+
+	return CheckCreateResult(res, PGRES_COMMAND_OK, "song");
+}
+
+
 
 std::string Model::CreateTablePerson()
 {
@@ -381,7 +501,7 @@ std::string Model::CreateTableArtist()
 		"label_id integer,"
 		"CONSTRAINT artist_id_pk PRIMARY KEY (artist_id),"
 		"CONSTRAINT artist_label_id_fk FOREIGN KEY (label_id)"
-			"REFERENCES public.label (label_id))";
+			"REFERENCES public.label (label_id) ON DELETE SET NULL);";
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
 
@@ -396,9 +516,9 @@ std::string Model::CreateTableArtist_Person()
 		"person_id integer NOT NULL,"
 		"CONSTRAINT artist_person_pk PRIMARY KEY (artist_id, person_id),"
 		"CONSTRAINT artist_person_artist_id_fk FOREIGN KEY (artist_id)"
-			"REFERENCES public.artist (artist_id),"
+			"REFERENCES public.artist (artist_id) ON DELETE CASCADE,"
 		"CONSTRAINT artist_person_person_id_fk FOREIGN KEY (person_id)"
-			"REFERENCES public.person (person_id))";
+			"REFERENCES public.person (person_id) ON DELETE CASCADE);";
 
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
@@ -414,9 +534,9 @@ std::string Model::CreateTableArtist_Song()
 		"song_id integer NOT NULL,"
 		"CONSTRAINT artist_song_pk PRIMARY KEY (artist_id, song_id),"
 		"CONSTRAINT artist_song_artist_id_fk FOREIGN KEY (artist_id)"
-			"REFERENCES public.artist (artist_id),"
+			"REFERENCES public.artist (artist_id) ON DELETE CASCADE,"
 		"CONSTRAINT artist_song_song_id_fk FOREIGN KEY (song_id)"
-			"REFERENCES public.song (song_id))";
+			"REFERENCES public.song (song_id) ON DELETE CASCADE);";
 
 
 	PGresult* res = PQexec(m_Connection, createTableSQL);
@@ -428,7 +548,7 @@ std::string Model::CheckCreateResult(PGresult* res, ExecStatusType status, const
 {
 	if (PQresultStatus(res) != status)
 	{
-		std::string errorMessage = std::string("Query execution failed for table:\n") + text  + PQerrorMessage(m_Connection);
+		std::string errorMessage = std::string("Query execution failed for table: ") + text + "\n" + PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
 		PQclear(res);
 		Finish();

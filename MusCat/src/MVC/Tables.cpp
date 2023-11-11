@@ -27,3 +27,18 @@ std::vector<std::vector<Column>> TableSpecs::s_Columns =
 	ArtistPersonColumns,
 	AtistSongColumns
 };
+
+std::vector<std::string> AuxiliaryTableSpecs::s_Names = {
+	"names", "surnames", "words"
+};
+
+std::vector<Column> NamesColumns = { {"names_id", ColumnType::Serial }, {"data", ColumnType::CharVar64} };
+std::vector<Column> SurnamesColumns = { {"surnames_id",ColumnType::Serial }, {"data", ColumnType::CharVar64 } };
+std::vector<Column> WordsColumns = { {"words_id",ColumnType::Serial }, {"data", ColumnType::CharVar64 } };
+
+std::vector<std::vector<Column>> AuxiliaryTableSpecs::s_Columns =
+{
+	NamesColumns,
+	SurnamesColumns,
+	WordsColumns
+};

@@ -1,4 +1,4 @@
-#include "WManagementDB.h"
+#include "ManagementDB.h"
 #include <imgui/imgui.h>
 #include "MVC/Controller.h"
 // temp
@@ -8,6 +8,7 @@ WManagementDB::WManagementDB()
 {
 	m_TableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY;
 	m_ColumnFlags = ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoClip;
+
 }
 
 void WManagementDB::OnRender()
@@ -24,8 +25,6 @@ void WManagementDB::OnRender()
 		DrawTab(Table::Artist_Person);
 		DrawTab(Table::Artist_Song);
 
-		
-
 		ImGui::EndTabBar();
 	}
 	ImGui::End();
@@ -33,22 +32,19 @@ void WManagementDB::OnRender()
 	ControlPanel();
 }
 
-
-
 void WManagementDB::ControlPanel()
 {
 	ImGui::Begin("Control Panel", NULL);
-
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));
 
-	if (ImGui::Button("Add Record", ImVec2(300, 40)))
-		m_Callback->OnAddRecord(m_TabSelectionContext);
+	if (ImGui::Button("Create Record", ImVec2(300, 40)))
+		m_Callback->OnCreateRecord(m_TabSelectionContext);
 
-	if (ImGui::Button("Edit Record", ImVec2(300, 40)))
-		m_Callback->OnEditRecord(m_TabSelectionContext);
+	if (ImGui::Button("Update Record", ImVec2(300, 40)))
+		m_Callback->OnUpdateRecord(m_TabSelectionContext);
 
 	if (ImGui::Button("Delete Record", ImVec2(300, 40)))
-		m_Callback->OnDeleteRecord();
+		m_Callback->OnDeleteRecord(m_TabSelectionContext);
 
 	ImGui::Separator();
 
@@ -59,9 +55,10 @@ void WManagementDB::ControlPanel()
 	ImGui::PopItemWidth();
 
 	if (ImGui::Button("Generate Data", ImVec2(300, 40)))
-		m_Callback->OnGenerateData();
+		m_GenerateTime = m_Callback->OnGenerateData(m_TabSelectionContext, m_GenerateRowsCount);
 
-
+	if (m_GenerateTime != 0)
+		ImGui::Text("Last data generation time: %.0lf (ms)", m_GenerateTime * 1000);
 
 	ImVec2 buttonSize(300, 40);
 	ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMin().x, ImGui::GetWindowContentRegionMax().y - buttonSize.y));
@@ -75,14 +72,13 @@ void WManagementDB::ControlPanel()
 
 void WManagementDB::DrawTab(Table id)
 {
-
 	if (ImGui::BeginTabItem(TableSpecs::GetName(id).c_str()))
 	{
 		m_NewTabSelectionContext = id;
 
 		if (m_TabSelectionContext != m_NewTabSelectionContext)
 		{
-			m_Callback->OnSelectedTabChanged(m_NewTabSelectionContext);
+			m_Callback->OnFetchData(m_NewTabSelectionContext);
 		}
 		m_TabSelectionContext = m_NewTabSelectionContext;
 
@@ -102,7 +98,6 @@ void WManagementDB::DrawTab(Table id)
 
 			while (clipper.Step())
 			{
-
 				for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
 				{
 					ImGui::TableNextRow();
@@ -113,7 +108,6 @@ void WManagementDB::DrawTab(Table id)
 					}
 				}
 			}
-
 			ImGui::EndTable();
 		}
 		ImGui::EndTabItem();
