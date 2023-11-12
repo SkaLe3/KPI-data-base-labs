@@ -27,8 +27,7 @@ void Controller::OnUpdate()
 void Controller::Run()
 {
 	CreateWindows();
-	//ShowWindow<WLogin>();
-	OnLogin("postgres", "skale2239");
+	ShowWindow<WLogin>();
 
 }
 
