@@ -148,7 +148,8 @@ bool Model::CreateRecord(Table table, std::vector<std::string> data, std::string
 
 	if (PQresultStatus(result) != PGRES_COMMAND_OK) {
 		
-		errorMessage = std::string("Insert Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
+		errorMessage = std::string("Insert Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" 
+			"Invalid dependent data\n"+ PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
 		VM_ERROR("Query text was: ", query, "\n");
 		PQclear(result);
@@ -226,7 +227,8 @@ bool Model::DeleteRecord(Table table, std::vector<Column> pkeyColumns, std::vect
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		errorMessage = std::string("Delete Record Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" + PQerrorMessage(m_Connection);
+		errorMessage = std::string("Delete Record Query execution failed for table: ") + TableSpecs::GetName(table) + "\n" 
+			"Deletion is not possible if there is dependent data\n"+ PQerrorMessage(m_Connection);
 		VM_ERROR(errorMessage);
 		VM_ERROR("Query text was: ", query, "\n");
 		PQclear(res);
