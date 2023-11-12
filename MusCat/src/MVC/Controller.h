@@ -31,6 +31,13 @@ public:
 	void OnFetchData(Table id);
 	bool OnFindRecord(Table id, std::vector<Column> columns, std::vector<std::string> data, IWindowUI* sender);
 
+	// Selections
+	void OnFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre);
+	void OnSecondSelection(const std::string& fromDate, const std::string& toDate);
+	void OnThirdSelection(const std::string& fromDate, const std::string& toDate);
+
+
+
 	std::string& GetErrorMessage() { return m_ErrorMessageText; }
 public:
 	void CreateWindows();

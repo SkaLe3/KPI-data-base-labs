@@ -396,6 +396,271 @@ bool Model::CheckTableMinRecords(Table table, int32_t count)
 
 }
 
+std::vector<std::string> Model::GetListOfGenres(std::string& errorMessage)
+{
+
+	std::vector<std::vector<std::string>> genres = *FetchTableData(Table::Genre, GetPKeyColumnTitles(Table::Genre, errorMessage), errorMessage);
+	std::vector<std::string> newGenres;
+	for (auto& row : genres)
+		newGenres.push_back(row[1]);
+	return newGenres;
+}
+
+
+std::pair<std::shared_ptr<TableData>, std::vector<std::string>> Model::ExecuteFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre, std::string& errorMessage)
+{
+	std::string query =
+		"WITH person_under_age AS( "
+		"	SELECT "
+		"	person_id, "
+		"	name, "
+		"	(DATE_PART('year', age(current_date, birth_date))) AS age "
+		"	FROM person "
+		"	WHERE(DATE_PART('year', age(current_date, birth_date))) < $1 "
+		"	ORDER BY age "
+		") "
+
+		", artists_of_persons AS( "
+		"	SELECT artist_person.artist_id, artist_person.person_id "
+		"	FROM artist_person "
+		"	INNER JOIN person_under_age ON person_under_age.person_id = artist_person.person_id "
+		") "
+		", artist_song_of_persons AS( "
+		"	SELECT DISTINCT artists_of_persons.artist_id, artist_song.song_id FROM artist_song "
+		"	INNER JOIN artists_of_persons ON artist_song.artist_id = artists_of_persons.artist_id "
+		"	INNER JOIN song ON artist_song.song_id = song.song_id "
+		"	WHERE song.genre_id = $3 "
+		") "
+		", artist_countsongs AS( "
+		"	SELECT artist_id, count(song_id) AS countsongs "
+		"	FROM artist_song_of_persons "
+		"	GROUP BY artist_id "
+		"	ORDER BY artist_id "
+		") "
+		", artist_countalbums AS( "
+		"	SELECT artist_id, count(album_id) AS countalbums "
+		"	FROM artist_song_of_persons "
+		"	INNER JOIN song ON artist_song_of_persons.song_id = song.song_id "
+		"	GROUP BY artist_id "
+		"	ORDER BY artist_id "
+		") "
+		", person_count AS( "
+		"	SELECT "
+		"	artists_of_persons.person_id, "
+		"	sum(artist_countsongs.countsongs) as countsong, "
+		"	sum(artist_countalbums.countalbums) as countalbum "
+		"	FROM artists_of_persons "
+		"	INNER JOIN artist_countsongs ON artists_of_persons.artist_id = artist_countsongs.artist_id "
+		"	INNER JOIN artist_countalbums ON artists_of_persons.artist_id = artist_countalbums.artist_id "
+		"	GROUP BY artists_of_persons.person_id "
+		") "
+		", results AS( "
+		"	SELECT person.name, age, countsong, countalbum, $4 as genre "
+		"	FROM person_count "
+		"	INNER JOIN person ON person_count.person_id = person.person_id "
+		"	INNER JOIN person_under_age ON person_count.person_id = person_under_age.person_id "
+		"	WHERE countsong > $2 "
+		"	ORDER BY countsong DESC "
+		") "
+
+		"SELECT * FROM results ";
+
+	std::shared_ptr<TableData> data = std::make_shared<TableData>();
+	std::string agestr = std::to_string(age);
+	std::string songCountstr = std::to_string(songCount);
+	std::string genreIdstr = std::to_string(genreId);
+	std::string genrestr = ("'" + genre + "'");
+	const char* params[4] =
+	{
+		agestr.c_str(),
+		songCountstr.c_str(),
+		genreIdstr.c_str(),
+		genrestr.c_str()
+	};
+
+	PGresult* result = PQexecParams(m_Connection, query.c_str(), 4, nullptr, params, nullptr, nullptr, 0);
+
+	if (PQresultStatus(result) != PGRES_TUPLES_OK)
+	{
+		errorMessage = std::string("First Selection Query execution failed:\n") + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		PQclear(result);
+		return { data, {} };
+	}
+
+	int32_t rows = PQntuples(result);
+	int32_t columns = PQnfields(result);
+
+	for (int row = 0; row < rows; ++row)
+	{
+		std::vector<std::string> rowData;
+		for (int col = 0; col < columns; ++col)
+		{
+			rowData.emplace_back(PQgetvalue(result, row, col));
+		}
+		data->push_back(rowData);
+	}
+
+	PQclear(result);
+	errorMessage = "";
+	return { data, {"Name", "Age", "Number of Songs", "Number of Albums", "Genre"}};
+}
+
+std::pair<std::shared_ptr<TableData>, std::vector<std::string>> Model::ExecuteSecondSelection(const std::string& fromDate, const std::string& toDate, std::string& errorMessage)
+{
+	std::string query =
+		"WITH song_in_interval AS( "
+		"	SELECT * "
+		"	FROM song "
+		"	WHERE  release_date > $1 AND release_date < $2 "
+		"	ORDER BY song_id "
+		") "
+		", genre_countsongs AS( "
+		"	SELECT genre_id, count(song_in_interval.song_id) as countsongs "
+		"	FROM song_in_interval "
+		"	GROUP BY genre_id "
+		"	ORDER BY countsongs DESC "
+		") "
+		", genre_countartists AS( "
+		"	SELECT genre_id, count(DISTINCT artist_song.artist_id) as countartists "
+		"	FROM song_in_interval "
+		"	INNER JOIN artist_song ON song_in_interval.song_id = artist_song.song_id "
+		"	GROUP BY genre_id "
+		"	ORDER BY countartists DESC "
+		") "
+
+		", artist_most_songs AS( "
+		"	SELECT "
+		"	song_in_interval.genre_id, "
+		"	artist_song.artist_id, "
+		"	RANK() OVER(PARTITION BY song_in_interval.genre_id ORDER BY COUNT(song_in_interval.song_id) DESC) AS artist_rank "
+		"	FROM "
+		"	song_in_interval "
+		"	INNER JOIN "
+		"	artist_song  ON song_in_interval.song_id = artist_song.song_id "
+		"	GROUP BY "
+		"	artist_song.artist_id, song_in_interval.genre_id "
+		") "
+		", results AS( "
+
+		"	SELECT "
+		"	max(genre.name) AS genre, "
+		"	max(genre_countsongs.countsongs) AS song_count, "
+		"	max(genre_countartists.countartists) AS artist_count, "
+		"	min(artist.title) AS most_popular_artist "
+		"	FROM "
+		"	genre_countsongs "
+		"	JOIN genre_countartists ON genre_countsongs.genre_id = genre_countartists.genre_id "
+		"	JOIN artist_most_songs ON genre_countsongs.genre_id = artist_most_songs.genre_id AND artist_most_songs.artist_rank = 1 "
+		"	JOIN artist ON artist_most_songs.artist_id = artist.artist_id "
+		"	JOIN genre ON genre_countsongs.genre_id = genre.genre_id "
+		"	GROUP BY genre_countsongs.genre_id "
+		"	ORDER BY genre_countsongs.genre_id "
+		") "
+
+		"SELECT * FROM results ";
+
+	std::shared_ptr<TableData> data = std::make_shared<TableData>();
+	const char* params[2] =
+	{
+		fromDate.c_str(),
+		toDate.c_str()
+	};
+
+	PGresult* result = PQexecParams(m_Connection, query.c_str(), 2, nullptr, params, nullptr, nullptr, 0);
+
+	if (PQresultStatus(result) != PGRES_TUPLES_OK)
+	{
+		errorMessage = std::string("Second Selection Query execution failed:\n") + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		PQclear(result);
+		return { data, {} };
+	}
+
+	int32_t rows = PQntuples(result);
+	int32_t columns = PQnfields(result);
+
+	for (int row = 0; row < rows; ++row)
+	{
+		std::vector<std::string> rowData;
+		for (int col = 0; col < columns; ++col)
+		{
+			rowData.emplace_back(PQgetvalue(result, row, col));
+		}
+		data->push_back(rowData);
+	}
+
+	PQclear(result);
+	errorMessage = "";
+	return { data, {"Genre", "Number of Songs", "Number of Artists", "The Most Popular Artist"} };
+
+}
+
+std::pair<std::shared_ptr<TableData>, std::vector<std::string>> Model::ExecuteThirdSelection(const std::string& fromDate, const std::string& toDate, std::string& errorMessage)
+{
+	std::string query =
+		"WITH new_song AS( "
+		"	SELECT song_id, song.title, genre.name as genre, song.release_date, album.title AS album, label.name AS label "
+		"	FROM song "
+		"	INNER JOIN genre ON song.genre_id = genre.genre_id "
+		"	LEFT JOIN album ON song.album_id = album.album_id "
+		"	LEFT JOIN label ON song.label_id = label.label_id "
+		"   WHERE release_date > $1 AND release_date < $2 "
+		") "
+		", results AS( "
+		"	SELECT "
+		"	new_song.title, "
+		"	new_song.genre, "
+		"	STRING_AGG(artist.title, '; ') AS artists, "
+		"	new_song.release_date, "
+		"	new_song.album, "
+		"	new_song.label "
+		"	FROM new_song "
+		"	INNER JOIN artist_song ON new_song.song_id = artist_song.song_id "
+		"	INNER JOIN artist ON artist_song.artist_id = artist.artist_id "
+		"	GROUP BY new_song.song_id, new_song.title, new_song.genre, new_song.release_date, new_song.album, new_song.label "
+		"   ORDER BY new_song.release_date DESC "
+		") "
+
+
+		"SELECT* FROM results ";
+
+	std::shared_ptr<TableData> data = std::make_shared<TableData>();
+	const char* params[2] =
+	{
+		fromDate.c_str(),
+		toDate.c_str()
+	};
+
+	PGresult* result = PQexecParams(m_Connection, query.c_str(), 2, nullptr, params, nullptr, nullptr, 0);
+
+	if (PQresultStatus(result) != PGRES_TUPLES_OK)
+	{
+		errorMessage = std::string("Third Selection Query execution failed:\n") + PQerrorMessage(m_Connection);
+		VM_ERROR(errorMessage);
+		PQclear(result);
+		return { data, {} };
+	}
+
+	int32_t rows = PQntuples(result);
+	int32_t columns = PQnfields(result);
+
+	for (int row = 0; row < rows; ++row)
+	{
+		std::vector<std::string> rowData;
+		for (int col = 0; col < columns; ++col)
+		{
+			rowData.emplace_back(PQgetvalue(result, row, col));
+		}
+		data->push_back(rowData);
+	}
+
+	PQclear(result);
+	errorMessage = "";
+	return { data, {"Title", "Genre", "Artists", "Release date", "Album", "Label"}};
+
+}
+
 bool Model::LoadTestDataSamples(std::string& errorMessage)
 {
 	errorMessage = "Failed to load test data samples";

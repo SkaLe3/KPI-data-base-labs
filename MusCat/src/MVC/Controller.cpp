@@ -27,8 +27,8 @@ void Controller::OnUpdate()
 void Controller::Run()
 {
 	CreateWindows();
-	ShowWindow<WLogin>();
-	
+	//ShowWindow<WLogin>();
+	OnLogin("postgres", "skale2239");
 
 }
 
@@ -74,8 +74,7 @@ void Controller::OnLogin(const std::string& username, const std::string& passwor
 
 void Controller::OnShowSelections()
 {
-	//std::vector<std::string> genres =  m_Model->GetGenres();
-	std::vector<std::string> genres = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" };
+	std::vector<std::string> genres =  m_Model->GetListOfGenres(m_ErrorMessageText);
 	static_pointer_cast<WDataSelection>(m_View->GetWindow<WDataSelection>())->Setup(genres);
 
 	HideWindow<WManagementDB>();
@@ -239,6 +238,48 @@ bool Controller::OnFindRecord(Table id, std::vector<Column> pkeyColumns, std::ve
 		sender->Update(recordData);
 
 	return !recordData.empty();
+}
+
+void Controller::OnFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre)
+{
+	auto [data, columns] = m_Model->ExecuteFirstSelection(age, songCount,genreId, genre, m_ErrorMessageText);
+	
+
+	if (data->empty() && !m_ErrorMessageText.empty())
+		ShowWindow<WError>();
+	else
+	{
+		m_View->Update<WDataSelection>(data);
+		static_pointer_cast<WDataSelection>(m_View->GetWindow<WDataSelection>())->SetColumns(columns);
+	}
+}
+
+void Controller::OnSecondSelection(const std::string& fromDate, const std::string& toDate)
+{
+	auto [data, columns] = m_Model->ExecuteSecondSelection(fromDate, toDate, m_ErrorMessageText);
+
+
+	if (data->empty() && !m_ErrorMessageText.empty())
+		ShowWindow<WError>();
+	else
+	{
+		m_View->Update<WDataSelection>(data);
+		static_pointer_cast<WDataSelection>(m_View->GetWindow<WDataSelection>())->SetColumns(columns);
+	}
+}
+
+void Controller::OnThirdSelection(const std::string& fromDate, const std::string& toDate)
+{
+	auto [data, columns] = m_Model->ExecuteThirdSelection(fromDate, toDate, m_ErrorMessageText);
+
+
+	if (data->empty() && !m_ErrorMessageText.empty())
+		ShowWindow<WError>();
+	else
+	{
+		m_View->Update<WDataSelection>(data);
+		static_pointer_cast<WDataSelection>(m_View->GetWindow<WDataSelection>())->SetColumns(columns);
+	}
 }
 
 void Controller::CreateWindows()

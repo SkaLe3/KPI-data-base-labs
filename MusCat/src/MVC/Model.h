@@ -25,6 +25,12 @@ public:
 
 	bool GenerateData(Table table,int32_t rowCount, std::string& errorMessage);
 	bool CheckTableMinRecords(Table table, int32_t count);
+
+	// Selections
+	std::vector<std::string> GetListOfGenres(std::string& errorMessage);
+	std::pair<std::shared_ptr<TableData>, std::vector<std::string>> ExecuteFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre, std::string& errorMessage);
+	std::pair<std::shared_ptr<TableData>, std::vector<std::string>> ExecuteSecondSelection(const std::string& fromDate, const std::string& toDate, std::string& errorMessage);
+	std::pair<std::shared_ptr<TableData>, std::vector<std::string>> ExecuteThirdSelection(const std::string& fromDate, const std::string& toDate, std::string& errorMessage);
 public:
 	// Test Data
 	bool LoadTestDataSamples(std::string& errorMessage);
