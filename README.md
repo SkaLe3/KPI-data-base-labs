@@ -18,3 +18,8 @@ Compile project and move files from dll folder to .exe file by path MusCat\bin\D
 * POSTGRESQL_INCLUDE with path to PostgreSQL\15\include folder
 * POSTGRESQL_LIB with path to PostgresSQL\15\lib folder
 
+# Possible improvements
+* Transfer the queries execution to using concurrency
+* Create generic functions for duplicated code
+* Unify variable names
+* Refactor some ideas of data replication between classes
