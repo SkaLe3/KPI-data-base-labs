@@ -10,7 +10,7 @@ Start by cloning the repository with git clone --recursive https://github.com/Sk
 After cloning run Setup.bat script file to generate a Visual Studio 2022 solution file
 
 3. Preparing:
-Compile project and move files from dll folder to .exe file
+Compile project and move files from dll folder to .exe file by path MusCat\bin\Debug-windows-x86_64\MusCat or MusCat\bin\Release-windows-x86_64\MusCat
 
 ## Requirements:
 * Installed PostgresSQL v15
