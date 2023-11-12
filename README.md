@@ -10,4 +10,7 @@ Start by cloning the repository with git clone --recursive https://github.com/Sk
 After cloning run Setup.bat script file to generate a Visual Studio 2022 solution file
 ## Requirements:
 * PostgresSQL v15
+* ## Add to your System Environment Variables:
+* POSTGRESQL_INCLUDE with path to PostgreSQL\15\include folder
+* POSTGRESQL_LIB with path to PostgresSQL\15\lib folder
 
