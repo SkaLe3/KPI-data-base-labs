@@ -1,6 +1,6 @@
 # KPI_DataBase_Labs
 Laboratory works from Data Bases in KPI
-![ER diagram](https://github.com/SkaLe3/KPI_DataBase_Labs/blob/b567f1d532c4f50e271cac97b28cdccdd8a8d6f5/ER1.png)
+![ER diagram](https://github.com/SkaLe3/KPI_DataBase_Labs/blob/28a54466825e473627a322b78ef2084d8fe1a28c/ER2.png)
 ## Report 1 link
 https://docs.google.com/document/d/19GQfMVTitYW0qXv-Y7oT_Ir1FnSwX1jy5lLQOoWN3fE/edit
 ## Report 2 link
