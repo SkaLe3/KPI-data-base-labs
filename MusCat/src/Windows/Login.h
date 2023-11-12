@@ -5,6 +5,7 @@ class WLogin : public IWindowUI
 public:
 	virtual void OnRender() override;
 private:
+	char m_DBname[32] = "";
 	char m_Username[32] = "";
 	char m_Password[32] = "";
 };

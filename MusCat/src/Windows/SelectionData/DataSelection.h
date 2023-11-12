@@ -37,5 +37,7 @@ private:
 
 	std::string m_FromDate3;
 	std::string m_ToDate3;
+
+	double m_ExecutionTime = 0;
 };
 

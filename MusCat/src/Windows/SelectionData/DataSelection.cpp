@@ -32,6 +32,9 @@ void WDataSelection::SelectionPanel()
 	SecondSelection();
 	ThirdSelection();
 
+	if (m_ExecutionTime != 0)
+		ImGui::Text("Last query execution time: %.0lf (ms)", m_ExecutionTime * 1000);
+
 	ImGui::Separator();
 
 
@@ -133,7 +136,7 @@ void WDataSelection::FirstSelection()
 
 	if (ImGui::Button("Select 1", ImVec2(300, 40)))
 	{
-		m_Callback->OnFirstSelection(m_Age, m_SongCount, m_CurrentGenreIdx + 1, m_Genres[m_CurrentGenreIdx]);
+		m_ExecutionTime = m_Callback->OnFirstSelection(m_Age, m_SongCount, m_CurrentGenreIdx + 1, m_Genres[m_CurrentGenreIdx]);
 	}
 	ImGui::Spacing(); ImGui::Separator();
 }
@@ -163,7 +166,7 @@ void WDataSelection::SecondSelection()
 
 	if (ImGui::Button("Select 2", ImVec2(300, 40)))
 	{
-		m_Callback->OnSecondSelection(m_FromDate2, m_ToDate2);
+		m_ExecutionTime = m_Callback->OnSecondSelection(m_FromDate2, m_ToDate2);
 	}
 	ImGui::Spacing(); ImGui::Separator();
 }
@@ -185,7 +188,7 @@ void WDataSelection::ThirdSelection()
 
 	if (ImGui::Button("Select 3", ImVec2(300, 40)))
 	{
-		m_Callback->OnThirdSelection(m_FromDate3, m_ToDate3);
+		m_ExecutionTime = m_Callback->OnThirdSelection(m_FromDate3, m_ToDate3);
 	}
 	ImGui::Spacing(); ImGui::Separator();
 }

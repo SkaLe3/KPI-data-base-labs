@@ -13,9 +13,14 @@ void WLogin::OnRender()
 	ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_Always);
 	ImGui::SetNextWindowPos(ImVec2(x + (width - 400) / 2, y + (height - 200) / 2), ImGuiCond_Always);
 
-	ImGui::Begin("Admin Sign In", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+	ImGui::Begin("Admin Log in", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-	ImGui::Dummy(ImVec2(0, 20));
+	ImGui::Dummy(ImVec2(20, 0));
+	ImGui::SameLine();
+
+	ImGui::InputTextWithHint("DB Name", "postgres", m_DBname, sizeof(m_DBname));
+
+	ImGui::Dummy(ImVec2{ 0, 5 });
 	ImGui::Dummy(ImVec2(20, 0));
 	ImGui::SameLine();
 
@@ -33,7 +38,7 @@ void WLogin::OnRender()
 
 	if (ImGui::Button("Log in", ImVec2{ 260, 30 }))
 	{
-		m_Callback->OnLogin(m_Username, m_Password);
+		m_Callback->OnLogin(m_DBname, m_Username, m_Password);
 	}
 
 

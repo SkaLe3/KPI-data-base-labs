@@ -13,9 +13,9 @@ void Model::Finish()
 	PQfinish(m_Connection);
 }
 
-bool Model::Connect(const std::string& username, const std::string& password, std::string& errorMessage)
+bool Model::Connect(const std::string& dbname , const std::string& username, const std::string& password, std::string& errorMessage)
 {
-	m_Connection = PQconnectdb(("dbname=MusicCatalog user=" + username + " password=" + password).c_str());
+	m_Connection = PQconnectdb(("dbname="+ dbname +" user = " + username + " password = " + password).c_str());
 
 	if (PQstatus(m_Connection) == CONNECTION_BAD)
 	{

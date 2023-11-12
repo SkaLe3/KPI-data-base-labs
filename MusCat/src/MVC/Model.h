@@ -11,7 +11,7 @@ class Model
 public:
 	~Model();
 	void Finish();
-	bool Connect(const std::string& username, const std::string& password, std::string& errorMessage);
+	bool Connect(const std::string& dbname, const std::string& username, const std::string& password, std::string& errorMessage);
 
 	bool CreateTables(std::string& errorMessage);
 

@@ -14,7 +14,7 @@ public:
 	~Controller() { m_View->RemoveAllWindows(); }
 	void OnUpdate();
 	void Run();
-	void OnLogin(const std::string& username, const std::string& password);
+	void OnLogin(const std::string& dbname, const std::string& username, const std::string& password);
 
 	void OnShowSelections();
 	void OnShowManagement();
@@ -32,9 +32,9 @@ public:
 	bool OnFindRecord(Table id, std::vector<Column> columns, std::vector<std::string> data, IWindowUI* sender);
 
 	// Selections
-	void OnFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre);
-	void OnSecondSelection(const std::string& fromDate, const std::string& toDate);
-	void OnThirdSelection(const std::string& fromDate, const std::string& toDate);
+	double OnFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre);
+	double OnSecondSelection(const std::string& fromDate, const std::string& toDate);
+	double OnThirdSelection(const std::string& fromDate, const std::string& toDate);
 
 
 

@@ -31,11 +31,11 @@ void Controller::Run()
 
 }
 
-void Controller::OnLogin(const std::string& username, const std::string& password)
+void Controller::OnLogin(const std::string& dbname, const std::string& username, const std::string& password)
 {
 	HideWindow<WLogin>();
 
-	bool success = m_Model->Connect(username, password, m_ErrorMessageText);
+	bool success = m_Model->Connect(dbname, username, password, m_ErrorMessageText);
 	if (!success)
 	{
 		ShowWindow<WError>();
@@ -239,10 +239,14 @@ bool Controller::OnFindRecord(Table id, std::vector<Column> pkeyColumns, std::ve
 	return !recordData.empty();
 }
 
-void Controller::OnFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre)
+double Controller::OnFirstSelection(int32_t age, int32_t songCount,int32_t genreId, std::string genre)
 {
+	auto startTime = std::chrono::high_resolution_clock::now();
+
 	auto [data, columns] = m_Model->ExecuteFirstSelection(age, songCount,genreId, genre, m_ErrorMessageText);
 	
+	std::chrono::steady_clock::time_point endTime;
+	double duration = 0;
 
 	if (data->empty() && !m_ErrorMessageText.empty())
 		ShowWindow<WError>();
@@ -250,13 +254,20 @@ void Controller::OnFirstSelection(int32_t age, int32_t songCount,int32_t genreId
 	{
 		m_View->Update<WDataSelection>(data);
 		static_pointer_cast<WDataSelection>(m_View->GetWindow<WDataSelection>())->SetColumns(columns);
+		endTime = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::duration<double>>(endTime - startTime).count();
 	}
+	return duration;
 }
 
-void Controller::OnSecondSelection(const std::string& fromDate, const std::string& toDate)
+double Controller::OnSecondSelection(const std::string& fromDate, const std::string& toDate)
 {
+	auto startTime = std::chrono::high_resolution_clock::now();
+
 	auto [data, columns] = m_Model->ExecuteSecondSelection(fromDate, toDate, m_ErrorMessageText);
 
+	std::chrono::steady_clock::time_point endTime;
+	double duration = 0;
 
 	if (data->empty() && !m_ErrorMessageText.empty())
 		ShowWindow<WError>();
@@ -264,13 +275,20 @@ void Controller::OnSecondSelection(const std::string& fromDate, const std::strin
 	{
 		m_View->Update<WDataSelection>(data);
 		static_pointer_cast<WDataSelection>(m_View->GetWindow<WDataSelection>())->SetColumns(columns);
+		endTime = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::duration<double>>(endTime - startTime).count();
 	}
+	return duration;
 }
 
-void Controller::OnThirdSelection(const std::string& fromDate, const std::string& toDate)
+double Controller::OnThirdSelection(const std::string& fromDate, const std::string& toDate)
 {
+	auto startTime = std::chrono::high_resolution_clock::now();
+
 	auto [data, columns] = m_Model->ExecuteThirdSelection(fromDate, toDate, m_ErrorMessageText);
 
+	std::chrono::steady_clock::time_point endTime;
+	double duration = 0;
 
 	if (data->empty() && !m_ErrorMessageText.empty())
 		ShowWindow<WError>();
@@ -278,7 +296,10 @@ void Controller::OnThirdSelection(const std::string& fromDate, const std::string
 	{
 		m_View->Update<WDataSelection>(data);
 		static_pointer_cast<WDataSelection>(m_View->GetWindow<WDataSelection>())->SetColumns(columns);
+		endTime = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration_cast<std::chrono::duration<double>>(endTime - startTime).count();
 	}
+	return duration;
 }
 
 void Controller::CreateWindows()
