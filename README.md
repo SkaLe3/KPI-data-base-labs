@@ -31,3 +31,4 @@ Compile project and move files from dll folder to .exe file by path MusCat\bin\D
 * Create generic functions for duplicated code
 * Unify variable names
 * Refactor some ideas of data replication between classes
+* Rewrite some SQL queries
