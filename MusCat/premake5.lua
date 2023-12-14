@@ -21,7 +21,6 @@ project "MusCat"
 		"%{IncludeDir.glm}",
 		"../vendor",
 		"%{IncludeDir.PostgreSQL}",
-        "%{IncludeDir.TinyORM}",
 		"src"
 	}
 
@@ -33,8 +32,6 @@ project "MusCat"
 	{
 		"VieM",
 		"libpq",
-        "Qt5Core",
-        "TinyORM"
 		
 	}
 
