@@ -1,5 +1,7 @@
 #include "Model.h"
 #include <VieM/Core/Log.h>
+#include "Models/GenreModel.h"
+
 #include <sstream>
 #include <algorithm>
 

@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <string>
 #include <queue>
+#include <mutex>
 #include <imgui.h>
 
 struct GLFWwindow;

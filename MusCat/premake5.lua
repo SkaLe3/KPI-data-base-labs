@@ -21,6 +21,10 @@ project "MusCat"
 		"%{IncludeDir.glm}",
 		"../vendor",
 		"%{IncludeDir.PostgreSQL}",
+        "%{IncludeDir.TinyORM}",
+        os.getenv("Qt") .. "/include",
+        os.getenv("Qt") .. "/include/QtCore",
+        os.getenv("Qt") .. "/include/QtSql",
 		"src"
 	}
 
@@ -32,6 +36,8 @@ project "MusCat"
 	{
 		"VieM",
 		"libpq",
+        "TinyORM"
+
 		
 	}
 
@@ -41,6 +47,7 @@ project "MusCat"
 	filter "system:windows"
 		systemversion "latest"
         defines { "VM_PLATFORM_WINDOWS" }
+        buildoptions {"/Zc:__cplusplus"}
 
 
 	filter "configurations:Debug"
