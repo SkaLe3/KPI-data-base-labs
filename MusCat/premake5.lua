@@ -31,7 +31,7 @@ project "MusCat"
 	links
 	{
 		"VieM",
-		"libpq"
+		"libpq",
 		
 	}
 
