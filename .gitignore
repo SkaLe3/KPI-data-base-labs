@@ -5,6 +5,7 @@ VieM/bin/
 MusCat/bin/
 MusCat/bin-int/
 vendor/TinyORM
+vendor/tabulate
 
 # Files
 *.user
