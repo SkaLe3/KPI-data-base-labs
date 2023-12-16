@@ -7,7 +7,7 @@ https://docs.google.com/document/d/19GQfMVTitYW0qXv-Y7oT_Ir1FnSwX1jy5lLQOoWN3fE/
 https://docs.google.com/document/d/1-5DNgfjI9YFzf9TkHMiKzHig48rSyPWDKDMv0Y8PabQ/edit?usp=sharing
 
 # How to use:
-## Build
+## Build from Source
 1. Downloading the repository:
 Start by cloning the repository with git clone --recursive https://github.com/SkaLe3/KPI_DataBase_Labs
 
@@ -15,16 +15,18 @@ Start by cloning the repository with git clone --recursive https://github.com/Sk
 After cloning run Setup.bat script file to generate a Visual Studio 2022 solution file
 
 3. Preparing:
-Compile the project and move files from dll folder to .exe file by path MusCat\bin\Debug-windows-x86_64\MusCat or MusCat\bin\Release-windows-x86_64\MusCat
-## Use
+Compile the project and move PostgreSQL dlls (or dlls from dll folder) to the executable file by path MusCat\bin\Debug-windows-x86_64\MusCat or MusCat\bin\Release-windows-x86_64\MusCat
+## Compiled binaries
 1. Download archive from releases
 2. Replace dlls from PostgreSQL directory if needed
     
-## Requirements:
-* Installed PostgresSQL v15
-* ## Add to your System Environment Variables:
-* POSTGRESQL_INCLUDE with path to PostgreSQL\15\include folder
-* POSTGRESQL_LIB with path to PostgresSQL\15\lib folder
+## Dependencies:
+* PostgresSQL v15: <br>
+     Add to your System Environment Variables:
+    * POSTGRESQL_INCLUDE with path to PostgreSQL\15\include folder
+    * POSTGRESQL_LIB with path to PostgresSQL\15\lib folder
+* All Dependencies of [ TinyORM ](https://github.com/silverqx/TinyORM) <br>
+* All remaining dependencies come with the repository
 
 # Possible improvements
 * Transfer the query execution to using concurrency
