@@ -3,12 +3,12 @@
 #include <string>
 #include "View.h"
 #include "MVC/Tables.h"
-class Model;
+class ModelBase;
 
 class Controller : public std::enable_shared_from_this<Controller>
 {
 public:
-	Controller(const std::shared_ptr<Model>& model, const std::shared_ptr<View>& view)
+	Controller(const std::shared_ptr<ModelBase>& model, const std::shared_ptr<View>& view)
 		: m_Model(model), m_View(view) { }
 
 	~Controller() { m_View->RemoveAllWindows(); }
@@ -53,7 +53,7 @@ public:
 		m_View->HideWindow<W>();
 	}
 private:
-	std::shared_ptr<Model> m_Model;
+	std::shared_ptr<ModelBase> m_Model;
 	std::shared_ptr<View> m_View;
 
 	std::string m_ErrorMessageText;

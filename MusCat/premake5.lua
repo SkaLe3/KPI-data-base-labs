@@ -66,3 +66,6 @@ project "MusCat"
 		runtime "Release"
 		optimize "on"
         symbols "off"
+        
+    filter { "toolset:msc*" }
+        buildoptions { "/bigobj" }

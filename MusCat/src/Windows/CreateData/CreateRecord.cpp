@@ -18,7 +18,6 @@ void WCreateRecord::OnRender()
 	ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMin().x, ImGui::GetWindowContentRegionMax().y - buttonSize.y));
 	if (ImGui::Button("Submit", buttonSize))
 	{
-
 		m_Callback->OnCreateRecordSubmit(m_SelectionContext, m_TextBuffer);
 	}
 

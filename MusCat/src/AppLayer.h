@@ -9,7 +9,7 @@
 
 
 #include "MVC/Controller.h"
-#include "MVC/Model.h"
+#include "MVC/ModelBase.h"
 #include "MVC/View.h"
 
 class AppLayer : public VieM::Layer
@@ -28,7 +28,7 @@ private:
 	FPS m_FPSPanel;
 
 	std::shared_ptr<View> m_View;
-	std::shared_ptr<Model> m_Model;
+	std::shared_ptr<ModelBase> m_Model;
 	std::shared_ptr<Controller> m_Controller;
 	
 

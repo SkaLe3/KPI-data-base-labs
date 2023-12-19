@@ -2,10 +2,14 @@
 #include "VieM/Core/EntryPoint.h"
 #include "VieM/ImGui/DemoLayer.h"
 #include "AppLayer.h"
+#include <QtCore>
 
 
 VieM::Application* VieM::CreateApplication(int argc, char** argv)
 {
+	// For TinyORM
+	QCoreApplication* a = new QCoreApplication(argc, argv);
+
 	VieM::ApplicationSpecification spec;
 	spec.Name = "MusiCatalog";
 	spec.CustomTitleBar = true;
@@ -23,7 +27,6 @@ VieM::Application* VieM::CreateApplication(int argc, char** argv)
 #else
 	app->PushLayer(appLayer);
 #endif
-	
 
 	return app;
 }

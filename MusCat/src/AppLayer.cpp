@@ -5,6 +5,9 @@
 #include <VieM/UI/UI.h>
 #include <VieM/UI/Theme.h>
 #include <VieM/Core/Log.h>
+#include "MVC/ModelORM.h"
+
+
 
 void AppLayer::OnAttach()
 {
@@ -38,10 +41,8 @@ void AppLayer::OnAttach()
 
 
 
-
-
 	m_View = make_shared<View>();
-	m_Model = make_shared<Model>();
+	m_Model = make_shared<ModelORM>();
 	m_Controller = make_shared<Controller>(m_Model, m_View);
 	m_View->AddListener(m_Controller);
 	m_Controller->Run();
